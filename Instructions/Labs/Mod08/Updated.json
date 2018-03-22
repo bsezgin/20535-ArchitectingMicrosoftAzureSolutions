@@ -87,51 +87,39 @@
         },
         {
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[variables('nicName')]",
+            "name": "[concat(variables('nicName'), copyIndex())]",
             "apiVersion": "2017-04-01",
             "location": "[resourceGroup().location]",
-            "copy": {
-                                         "name": "storagecopy",
-                                         "count": 3
-                                        },
             "properties": {
                 "ipConfigurations": [
                     {
-                        "name": "[concat(variables('nicName'), copyIndex())]",
+                        "name": "ipconfig1",
                         "properties": {
-                            "privateIPAllocationMethod": "Dynamic"
-                            },
+                            "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
                                 "id": "[variables('subnetRef')]"
-                                
                             }
-                        
+                        }
                     }
                 ]
             },
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
-            ]
+            ],
+            "copy": {
+                "name": "storagecopy",
+                "count": 3
+            }
         },
-        {
-    "type": "Microsoft.Compute/availabilitySets",
-    "name": "BalancedSet",
-    "apiVersion": "2017-12-01",
-    "location": "[resourceGroup().location]",
-    "sku": {
-        "name": "Classic"
-    },
-    "properties": {
-        "platformFaultDomainCount": "2",
-        "platformUpdateDomainCount": "2"
-    }
-},
         {
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat(variables('vmName'), copyIndex())]",
             "apiVersion": "2017-03-30",
             "location": "[resourceGroup().location]",
             "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets','BalancedSet')]"
+                }, 
                 "hardwareProfile": {
                     "vmSize": "[variables('vmSize')]"
                 },
@@ -140,54 +128,6 @@
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
-                "properties": {           
-    "availabilitySet": {
-        "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('availabilitySetName'))]"
-    }, 
-    "hardwareProfile": {
-        "vmSize": "[variables('vmSize')]"
-    },
-    "osProfile": {
-        "computerName": "[variables('vmName')]",
-        "adminUsername": "[parameters('adminUsername')]",
-        "adminPassword": "[parameters('adminPassword')]"
-    },
-    "storageProfile": {
-        "imageReference": {
-            "publisher": "[variables('imagePublisher')]",
-            "offer": "[variables('imageOffer')]",
-            "sku": "[parameters('ubuntuOSVersion')]",
-            "version": "latest"
-        },
-        "osDisk": {
-            "createOption": "FromImage"
-        },
-        "dataDisks": [
-            {
-                "diskSizeGB": 1023,
-                "lun": 0,
-                "createOption": "Empty"
-            }
-        ]
-    },
-    "networkProfile": {
-        "networkInterfaces": [
-            {
-                "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicName'), copyIndex()))]"
-            }
-        ]
-    },
-    "diagnosticsProfile": {
-        "bootDiagnostics": {
-            "enabled": true,
-            "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob)]"
-        }
-    }
-},
-                "copy": {
-    "name": "vmcopy",
-    "count": 3
-},
                 "storageProfile": {
                     "imageReference": {
                         "publisher": "[variables('imagePublisher')]",
@@ -223,10 +163,26 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
                 "[resourceId('Microsoft.Network/networkInterfaces/', concat(variables('nicName'), copyIndex()))]"
-            ]
+            ],
+            "copy": {
+                "name": "vmcopy",
+                "count": 3
+            }
+        },
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "BalancedSet",
+            "apiVersion": "2017-12-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Aligned"
+            },
+            "properties": {
+                "platformFaultDomainCount": "2",
+                "platformUpdateDomainCount": "2"
+            }
         }
     ],
     "outputs": {
-        
+        }
     }
-}
