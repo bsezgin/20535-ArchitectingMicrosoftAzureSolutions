@@ -4,6 +4,8 @@
 
 - **[Download AllFiles Content](https://bulenteststorage.blob.core.windows.net/architectingazure/Allfiles.zip)**
 
+- **[Download All Presentations](https://bulenteststorage.blob.core.windows.net/20535/Archive.zip)**
+
 
 ## What are we doing?
 
